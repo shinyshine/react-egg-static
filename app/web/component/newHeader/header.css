@@ -1,0 +1,37 @@
+@import "../../asset/css/global.css";
+.header{
+    height: 100px;
+    background: #2a2929;
+    line-height: 100px;
+    margin-bottom: 40px;
+    box-shadow: 0 2px 8px #f0f1f2;
+}
+
+.header h1 {
+    margin: 0;
+    text-align: left;
+    line-height: 100px;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 34px;
+}
+.header nav {
+    letter-spacing: 2px;
+    
+}
+.header nav a {
+    color: #ababab;
+    text-decoration: none;
+}
+.header nav a:hover {
+    color: #efaa1f;
+    text-decoration: underline;
+}
+
+.header-user-name {
+    color: #ffffff;
+    text-align: right;
+}
+.header-avatar {
+    text-align: right;
+}

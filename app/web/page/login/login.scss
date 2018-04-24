@@ -1,0 +1,37 @@
+@import "../../asset/css/global.css";
+.login-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center
+}
+.login-bg {
+    width: 60%;
+    height: 100vh;
+    background: url(./../../asset/images/login_bg.jpg) no-repeat;
+    background-size: cover;
+    flex: 1 0 auto;
+    h1 {
+        margin: 0;
+        color: #ffffff;
+        text-align: center;
+        line-height: 100vh;
+        font-size: 80px;
+        font-weight: 700;
+        letter-spacing: 4px;
+    }
+}
+.login-form-box {
+    width: 40%;
+    flex: 1 0 auto;
+    padding: 0 60px;
+    height: 500px;
+    .ant-tabs-bar {
+        border: none;
+    }
+    .ant-tabs-nav-scroll {
+        text-align: center;
+    }
+}
+
+
+

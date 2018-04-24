@@ -1,0 +1,11 @@
+.sub-title{
+    font-size: 24px;
+    padding-bottom: 10px;
+}
+.form-container{
+    width: 800px;
+    .ant-form-item-label label{
+        font-size: 16px;
+        color: rgba(0, 0, 0, 0.75);
+    }
+}

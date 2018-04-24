@@ -1,0 +1,36 @@
+.teacher-container{
+    .content{
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .course-list{
+        width: 65%;
+        .ant-list-item-meta-title{
+            line-height: 32px;
+        }
+        .course-title{
+            line-height: 32px;
+        }
+        .ant-collapse {
+            margin-top: 24px;
+        }
+    }
+    .question-list{
+        width: 30%;
+        h2 {
+            margin-bottom: 6px;
+            line-height: 32px;
+        }
+    }
+    .right-btn-group{
+        text-align: right;
+        .ant-btn{
+            margin-right: 18px;
+        }
+    }
+    .add-class-btn{
+        margin-top: 4px;
+        margin-bottom: 10px;
+    }
+}
