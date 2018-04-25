@@ -1,44 +1,11 @@
 import React, { Component } from 'react';
-import { Button, List, Icon, Input } from 'antd';
+import { Button, List, Icon, Input, message, Popconfirm } from 'antd';
 
 const { TextArea } = Input;
 
 import { modifyCourse } from 'service/course'
+import { getCourseApi, deleteCourse } from 'service/teacher'
 import { linkTo } from 'utils'
-const data = [
-  {
-    course_id: 24,
-    tea_id: '20141002418',
-    create_time: '2018-04-12 21:54:28',
-    course_name: 'DB2',
-    tea_name: 'diangdiang',
-    introduction: 'introductionintroductionintroduction here'
-  },
-  {
-    course_id: 25,
-    tea_id: '20141002418',
-    create_time: '2018-04-12 21:54:28',
-    course_name: 'DB2',
-    tea_name: 'diangdiang',
-    introduction: 'introductionintroductionintroduction here'
-  },
-  {
-    course_id: 26,
-    tea_id: '20141002418',
-    create_time: '2018-04-12 21:54:28',
-    course_name: 'DB2',
-    tea_name: 'diangdiang',
-    introduction: 'introductionintroductionintroduction here'
-  },
-  {
-    course_id: 27,
-    tea_id: '20141002418',
-    create_time: '2018-04-12 21:54:28',
-    course_name: 'DB2',
-    tea_name: 'diangdiang',
-    introduction: 'introductionintroductionintroduction here'
-  }
-];
 
 const EditableCell = ({ editable, introduction, onChange}) => (
     <div>
@@ -54,10 +21,20 @@ export default class Notice extends Component {
   constructor(props) {
       super(props);
 
-      this.state = { data };
+      this.state = {};
+  }
+
+  componentWillMount() {
+    getCourseApi().then( res => {
+      const data = res.data.data;
+
+      this.setState({
+        data: data ? data.list : []
+      })
+
+    })
   }
   handleInputChange(value, id) {
-      console.log(value, id);
 
       const newData = [...this.state.data];
       const target = newData.filter( item => item.course_id === id)[0];
@@ -90,24 +67,37 @@ export default class Notice extends Component {
     const target = newData.filter( item => item.course_id === key)[0];
 
     // 确认修改，需要调用接口
-    // modifyCourse(target).then( res => {
-    //     delete target.editable;    
-    //     this.setState({
-    //         data: newData
-    //     })
-    // })
+    modifyCourse({
+      course_id: target.course_id,
+      course_intro: target.introduction
+    }).then( res => {
+      if(res.data.success) {
+        message.success('修改成功');
+        delete target.editable;    
+        this.setState({
+            data: newData
+        })
+      }
+        
+    })
+  }
 
-    delete target.editable;    
-    this.setState({
-        data: newData
+  delete( course_id ) {
+    console.log('course', course_id)
+    deleteCourse({ course_id }).then( res => {
+      if(res.data.success) {
+        message.success('成功删除一门课程');
+        window.location.reload();
+      } else {
+        message.error('出现错误，请稍后重试')
+      }
     })
 
-    
   }
 
   // 跳转到添加课程页面
   addCourse() {
-    linkTo('add');
+    linkTo('/add');
   }
   render() {
     const { data } = this.state;
@@ -117,12 +107,16 @@ export default class Notice extends Component {
       </div>
 
       <List
+        loading={!data}
+        locale={{emptyText: '暂无课程'}}
         itemLayout="horizontal"
         dataSource={data}
         renderItem={item => (
             <List.Item actions={[
                     !item.editable? <a onClick={() => this.edit(item.course_id)}>修改</a> : <a onClick={() => this.confirmEdit(item.course_id)}>确认修改</a>,  
-                    <a>删除</a>
+                    <Popconfirm title="确认删除该课程及所有相关的数据？" okText="确认" cancelText="取消" onConfirm={this.delete.bind(this, item.course_id)}> 
+                      <a>删除</a>
+                    </Popconfirm>
                 ]}>
                 <List.Item.Meta 
                   title={<strong>{item.course_name}</strong>}

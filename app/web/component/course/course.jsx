@@ -5,7 +5,7 @@ import { BrowserRouter, Route, Link, Switch } from 'react-router-dom';
 import File from './components/file';
 import List from './components/list';
 
-import { Menu } from 'antd';
+import { Menu, Breadcrumb, Icon } from 'antd';
 
 const handleClick = e => {
   console.log('click ', e);
@@ -28,6 +28,14 @@ class App extends Component {
   render() {
     return <BrowserRouter>
       <div className="main-container">
+      <Breadcrumb>
+        <Breadcrumb.Item href="/teacher">
+          <Icon type="home" /> 返回首页
+        </Breadcrumb.Item>
+        <Breadcrumb.Item>
+          课程管理
+        </Breadcrumb.Item>
+      </Breadcrumb>
         <Menu onClick={this.handleClick.bind(this)} selectedKeys={[this.state.current]} mode="horizontal">
           <Menu.Item key="list">
             <Link to="/course">课程列表</Link>

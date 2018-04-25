@@ -2,8 +2,7 @@ import React, { Component } from 'react';
 import { List, Icon, Spin } from 'antd';
 
 import { getNoticesApi } from 'service/notice'
-const queryString = require('query-string');
-const class_id = queryString.parse(location.search).class;
+
 export default class Notice extends Component {
     constructor(props) {
         super(props);
@@ -11,6 +10,8 @@ export default class Notice extends Component {
     }
 
     componentWillMount() {
+        const { class_id } = this.props;
+
         getNoticesApi({ class_id }).then( res => {
             console.log(res);
             const data = res.data.data;
@@ -30,7 +31,7 @@ export default class Notice extends Component {
                             itemLayout="horizontal"
                             dataSource={notice}
                             renderItem={item => (
-                                <List.Item>
+                                <List.Item actions={[<a>删除</a>]}>
                                     <List.Item.Meta 
                                     title={<strong>{item.title}</strong>}
                                     description={

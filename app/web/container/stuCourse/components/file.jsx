@@ -1,78 +1,48 @@
 import React, { Component } from 'react';
 import { List, Button } from 'antd';
+import { fileListApi } from 'service/course'
 
+import { server } from 'config/config.server'
 
-const mock = [
-    {
-        course_id:11,
-        filename:'Jessy_HSBC.doc',
-        create_time:'2018-04-15 13:13:03',
-        tea_id:20141002426,
-        file_id:'56db8e9f08ba43d8b2ed15c13ecef41c',
-        id:9,
-        tea_name:'tDiang',
-        url:'/fileDir/u/2018-03-13/dc0b7b03e6ce4e89866bb61892209492Jessy_HSBC.doc',
-        title: '第五周的ppt',
-        content: '请认真阅读ppt ok？？？？'
-    },{
-        course_id:11,
-        filename:'Jessy_HSBC.doc',
-        create_time:'2018-04-15 13:13:03',
-        tea_id:20141002426,
-        file_id:'56db8e9f08ba43d8b2ed15c13ecef41c',
-        id:10,
-        tea_name:'tDiang',
-        url:'/fileDir/u/2018-03-13/dc0b7b03e6ce4e89866bb61892209492Jessy_HSBC.doc',
-        title: '第五周的ppt',
-        content: '请认真阅读ppt   ok？？？？'
-    },{
-        course_id:11,
-        filename:'Jessy_HSBC.doc',
-        create_time:'2018-04-15 13:13:03',
-        tea_id:20141002426,
-        file_id:'56db8e9f08ba43d8b2ed15c13ecef41c',
-        id:911,
-        tea_name:'tDiang',
-        url:'/fileDir/u/2018-03-13/dc0b7b03e6ce4e89866bb61892209492Jessy_HSBC.doc',
-        title: '第五周的ppt',
-        content: '请认真阅读ppt   ok？？？？'
-    },{
-        course_id:11,
-        filename:'Jessy_HSBC.doc',
-        create_time:'2018-04-15 13:13:03',
-        tea_id:20141002426,
-        file_id:'56db8e9f08ba43d8b2ed15c13ecef41c',
-        id:92,
-        tea_name:'tDiang',
-        url:'/fileDir/u/2018-03-13/dc0b7b03e6ce4e89866bb61892209492Jessy_HSBC.doc',
-        title: '第五周的ppt',
-        content: '请认真阅读ppt   ok？？？？'
-    }
-]
+const queryString = require('query-string');
+const class_id = queryString.parse(location.search).class;
+const course_id = queryString.parse(location.search).course;
 
 const FinishedFile = ({ item }) => (
     <div className="ant-upload-list-item ant-upload-list-item-done">
         <div className="ant-upload-list-item-info">
             <span><i className="anticon anticon-paper-clip"></i>
-            <span className="ant-upload-list-item-name" title={item.filename}><a href={item.url}>{item.filename}</a></span></span>
+            <span className="ant-upload-list-item-name" title={item.filename}><a href={`${server}${item.url}`}>{item.filename}</a></span></span>
         </div>
     </div> 
 )
 export default class Question extends Component {
     constructor() {
         super();
+
+        this.state = {}
     }
 
-    componentDidMount() {
+    componentWillMount() {
+        fileListApi({course_id}).then( res => {
+            console.log('file list', res)
+            const data = res.data.data;
 
+            this.setState({
+                file: data ? data.list : []
+            })
+        })
     }
 
 
     render() {
+        const { file } = this.state;
         return <div className="tab-container">
             <List
+                loading={!file}
+                locale={{emptyText: '暂无相关课程资料'}}
                 itemLayout="horizontal"
-                dataSource={mock}
+                dataSource={file}
                 renderItem={item => (
                     <List.Item>
                         <List.Item.Meta

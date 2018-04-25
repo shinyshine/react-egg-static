@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
-import { Table } from 'antd';
+import { Table, Spin } from 'antd';
+import { getStudentsApi } from 'service/class'
 
 const columns = [{
   title: '姓名',
@@ -29,39 +30,63 @@ const columns = [{
   }
 }]
 
-const data = [{
-  stu_name: '李素珍',
-  stu_id: '20141002418',
-  email: '393235901@qq.com',
-  phone: '18826103726'
-},{
-  stu_name: '罗晓彤',
-  stu_id: '20141002426',
-  email: '332388784@qq.com',
-  phone: '18826103737'
-},{
-  stu_name: '罗大姐',
-  stu_id: '20141002418',
-  email: '393235901@qq.com',
-  phone: '18826103726'
-},{
-  stu_name: '李大妈',
-  stu_id: '20141002418',
-  email: '393235901@qq.com',
-  phone: '18826103726'
-},{
-  stu_name: '李公公',
-  stu_id: '20141002418',
-  email: '393235901@qq.com',
-  phone: '18826103726'
-},]
+// const data = [{
+//   stu_name: '李素珍',
+//   stu_id: '20141002418',
+//   email: '393235901@qq.com',
+//   phone: '18826103726'
+// },{
+//   stu_name: '罗晓彤',
+//   stu_id: '20141002426',
+//   email: '332388784@qq.com',
+//   phone: '18826103737'
+// },{
+//   stu_name: '罗大姐',
+//   stu_id: '20141002418',
+//   email: '393235901@qq.com',
+//   phone: '18826103726'
+// },{
+//   stu_name: '李大妈',
+//   stu_id: '20141002418',
+//   email: '393235901@qq.com',
+//   phone: '18826103726'
+// },{
+//   stu_name: '李公公',
+//   stu_id: '20141002418',
+//   email: '393235901@qq.com',
+//   phone: '18826103726'
+// },]
 
 
 
 export default class About extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {}
+  }
+
+  componentWillMount() {
+    const { class_id } = this.props;
+
+    getStudentsApi({ class_id }).then( res => {
+      const data = res.data.data;
+
+      this.setState({
+        list: data ? data.list : []
+      })
+    })
+  }
   render() {
+    const { list } = this.state;
     return <div className="stu_list">
-      <Table columns={columns} dataSource={data} />
+      {
+        list && list.length > 0 ?
+          <Table columns={columns} dataSource={list} />
+          : (
+            list && list.length == 0 ? <div style={{textAlign: 'center'}}>暂无数据</div>
+            : <div style={{textAlign: 'center'}}><Spin /></div>
+          )
+      }
     </div>
   }
 }

@@ -1,61 +1,46 @@
 import React, { Component } from 'react';
-import { Collapse, List, Avatar, Row, Col, Button, Icon, Popconfirm } from 'antd';
+import { Collapse, List, Avatar, Row, Col, Button, Icon, Popconfirm, Spin, message } from 'antd';
 
-import { fileListApi, courseListApi } from 'service/course'
+import { fileListApi } from 'service/course'
+import { getCourseApi } from 'service/teacher'
+import { deleteFileApi } from 'service/file'
 import { linkTo } from 'utils'
+import { server } from 'config/config.server'
 
 const Panel = Collapse.Panel;
-const mockFileList = [{
-    file_id: '56db8e9f08ba43d8b2ed15c13ecef41c',
-    create_time: '2018-04-15 13:13:03',
-    filename: 'Jessy_HSBC.doc',
-    url: '/fileDir/u/2018-03-13/dc0b7b03e6ce4e89866bb61892209492Jessy_HSBC.doc',
-}];
-const courseList = [
-    {
-        course_id:24,
-        update_time:null,
-        tea_id:'20141002426',
-        create_time:'2018-04-12 21:54:28',
-        course_name:'DB2DB2DB2DB2DB2',
-        tea_name:'tDiang',
-        introduction:'11255'
-    },
-    {
-        course_id:25,
-        update_time:null,
-        tea_id:'20141002426',
-        create_time:'2018-04-12 21:54:28',
-        course_name:'DB2DB2DB2DB2',
-        tea_name:'tDiang',
-        introduction:'11255'
-    },
-    {
-        course_id:26,
-        update_time:null,
-        tea_id:'20141002426',
-        create_time:'2018-04-12 21:54:28',
-        course_name:'DB2DB2DB2DB2DB2DB2DB2DB2',
-        tea_name:'tDiang',
-        introduction:'11255'
-    }
-]
 
+const FinishedFile = ({ item }) => (
+    <div className="ant-upload-list-item ant-upload-list-item-done">
+        <div className="ant-upload-list-item-info">
+            <span><i className="anticon anticon-paper-clip"></i>
+            <span className="ant-upload-list-item-name" title={item.filename}><a href={`${server}${item.url}`}>{item.filename}</a></span></span>
+        </div>
+    </div> 
+)
 export default class FileList extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {
-        course: courseList
-    }
+    this.state = {}
 
   }
 
   componentWillMount() {
-      const { course } = this.state;
 
-    // 想办法获取到course_id去请求第一门课程的文件列表
-    this.fetchFileListById(course[0].course_id);
+    getCourseApi().then( res => {
+        console.log(res)
+
+        const data = res.data.data;
+        this.setState({
+            course: data ? data.list : []
+        })
+
+        if( data && data.list.length ) {
+            // 想办法获取到course_id去请求第一门课程的文件列表
+            this.fetchFileListById(data.list[0].course_id)
+
+        }
+    })
 
     
 
@@ -74,22 +59,15 @@ export default class FileList extends Component {
     if(target.fileList) return;
 
     // 没有数据  需要请求
-    // fileListApi({course_id}).then( res => {
+    fileListApi({course_id}).then( res => {
+        console.log('file list', res)
+        const data = res.data.data;
 
-    //     target.fileList = res
-    //     this.setState({
-    //         course: newData
-    //     })
-    // })
-
-    console.log('request')
-    
-    target.fileList = mockFileList;
-
-    this.setState({
-        course: newData
+        target.fileList = data ? data.list : []
+        this.setState({
+            course: newData
+        })
     })
-
   }
 
   togglePannel(course_id) {
@@ -102,38 +80,61 @@ export default class FileList extends Component {
   }
 
   deleteFile(file_id) {
+    console.log('file id', file_id)
 
+    deleteFileApi({ file_id }).then( res => {
+        if(res.data.success) {
+            message.success('成功删除');
+            window.location.reload()
+        } else {
+            message.error('操作失败，请稍后重试')
+        }
+    })
 
   }
 
-  lintToUpload(course_id) {
-    linkTo(`upload?cid=${course_id}`)
+  linkToUpload({ course_id, course_name }) {
+    linkTo(`/upload?cid=${course_id}&c_name=${course_name}`)
   }
   render() {
     const { course } = this.state;
     return <div className="tab-container">
+    {
+        course && course.length ? <Collapse style={{marginTop: '24px'}} defaultActiveKey={[course[0].course_id.toString()]} onChange={this.togglePannel.bind(this)} accordion>
+        {
+          course.map( (item, index) => {
+              return <Panel header={item.course_name} key={item.course_id}>
+                  <div className="btn-right-align">
+                    <Button type="primary" onClick={this.linkToUpload.bind(this, item)}><Icon type="upload" />上传资料</Button>
+                  </div>
+                  
+                  <List
+                      loading={!item.fileList}
+                      locale={{emptyText: '暂无该课程的相关资料'}}
+                      itemLayout="horizontal"
+                      dataSource={item.fileList}
+                      renderItem={file => (
+                          <List.Item actions={[<Popconfirm title="确认删除该文件？" okText="确认" cancelText="取消" onConfirm={this.deleteFile.bind(this, file.file_id)}><a>删除</a></Popconfirm>]}>
+                              <List.Item.Meta 
+                                title={<strong>{file.title}</strong>}
+                                description={
+                                    <div>
+                                        <p>{file.introduction}</p>
+                                        <FinishedFile item={file} />
+                                    </div>
+                                }
+                              />
+                          </List.Item>
+                      )}
+                  />
+              </Panel>
+          })
+        }
+      </Collapse>
+      : ( course && course.length === 0 ? <div style={{textAlign: 'center'}}>暂无课程</div> : <div style={{textAlign: 'center'}}><Spin /></div>)
+    }
       
-        <Collapse style={{marginTop: '24px'}} defaultActiveKey={[course[0].course_id.toString()]} onChange={this.togglePannel.bind(this)} accordion>
-          {
-            course ? course.map( (item, index) => {
-                return <Panel header={item.course_name} key={item.course_id}>
-                    <div className="btn-right-align">
-                      <Button type="primary" onClick={this.lintToUpload.bind(this, item.course_id)}><Icon type="upload" />上传资料</Button>
-                    </div>
-                    <List
-                        itemLayout="horizontal"
-                        dataSource={item.fileList}
-                        renderItem={file => (
-                            <List.Item actions={[<Popconfirm title="确认删除该文件？" okText="确认" cancelText="取消"><a onClick={this.deleteFile.bind(this, file.file_id)}>删除</a></Popconfirm>]}>
-                                <List.Item.Meta 
-                                title={<a href={file.url}>{file.filename}</a>}/>
-                            </List.Item>
-                        )}
-                    />
-                </Panel>
-            }) : null
-          }
-        </Collapse>
+        
     </div>
   }
 }

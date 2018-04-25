@@ -6,6 +6,9 @@ import Student from 'container/student';
 
 
 export default class Teach extends Component {
+    constructor(props) {
+        super(props)
+    }
     componentDidMount() {
         console.log('----componentDidMount-----');
     }

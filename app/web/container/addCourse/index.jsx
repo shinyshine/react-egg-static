@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
-import { Form, Input, Icon, Button } from 'antd';
+import { Form, Input, Icon, Button, message } from 'antd';
 
 const FormItem = Form.Item;
+
+import { createCourseApi } from 'service/course'
+import { linkTo } from 'utils'
 
 // 用户添加班级的输入框灵活增减
 let uuid = 0;
@@ -42,7 +45,21 @@ class Add extends Component {
         e.preventDefault();
         this.props.form.validateFields((err, values) => {
             if (!err) {
-                console.log('Received values of form: ', values);
+                let classStr = '';
+                values.course_class.map( item => {
+                    classStr += `${item},`
+                })
+
+                values.class_name = classStr;
+
+                createCourseApi(values).then( res => {
+                    console.log('add course', res)
+                    if(res.data.success) {
+                        message.success('成功创建一门课程');
+                        linkTo('/teacher');
+                    }
+                })
+
             }
         });
     }
@@ -70,7 +87,7 @@ class Add extends Component {
         const formItems = keys.map((k, index) => {
             return (
                 <FormItem key={k}>
-                    {getFieldDecorator(`course_class[${k+1}]`)(
+                    {getFieldDecorator(`course_class[${k}]`)(
                         <Input placeholder="请填写班级名称" style={{ width: '60%', marginRight: 8 }} />
                     )}
                     {keys.length > 1 ? (

@@ -1,8 +1,11 @@
 import React, { Component } from 'react';
 
-import { Modal, Button, Rate, Input } from 'antd';
+import { Modal, Button, Rate, Input,message } from 'antd';
 const { TextArea } = Input;
 import matchScore from 'utils/score';
+import  { setGradeApi } from 'service/task'
+
+import { server } from 'config/config.server'
 
 export default class Pop extends Component {
     constructor(props) {
@@ -51,9 +54,10 @@ export default class Pop extends Component {
     handleOk() {
         this.setState({ loading: true });
 
-        setTimeout(() => {
-            this.setState({ loading: false});
-        }, 1000)
+        // setTimeout(() => {
+        //     this.setState({ loading: false});
+        // }, 1000)
+
         // 在这里提交作业的评分到接口
         // todo...
 
@@ -62,8 +66,25 @@ export default class Pop extends Component {
         const { task_id, submit_tid } = this.props.modalItem;
         const { score, comment } = this.state;
 
-        this.props.onComment(task_id, submit_tid, { score, comment })
-        this.props.handleCancel();
+        setGradeApi({
+            submit_tid,
+            grade: score,
+            remark: comment
+        }).then( res => {
+            console.log('set grade', res)
+            if(res.data.success) {
+                message.success('已提交评分');
+                this.setState({ loading: false });
+                this.props.onComment(task_id, submit_tid, { score, comment })
+                this.props.handleCancel();
+                
+            } else {
+                message.error('出现错误，请稍后重试')
+            }
+        })
+        
+
+        
     }
     setStars(value) {
         this.setState({
@@ -86,7 +107,7 @@ export default class Pop extends Component {
         return <div>
             <Modal
                 visible={visible}
-                title={modalItem.title || ''}
+                title={modalItem.stu_name || ''}
                 onOk={this.handleOk}
                 onCancel={this.handleCancel.bind(this)}
                 footer={[
@@ -95,15 +116,13 @@ export default class Pop extends Component {
                         提交评分
                     </Button>,
                 ]}>
-                <p>{modalItem.content || ''}</p>
-                <ul className="file-list">
-                {
-                    modalItem.files && modalItem.files.map( (item,index) => {
-                        return <li key={index}><a href={item.link}>{item.filename}</a></li>
-                    })
-                }
-                </ul>
-                <h2 className="sub-title">点评</h2>
+                <div className="ant-upload-list-item ant-upload-list-item-done">
+                    <div className="ant-upload-list-item-info">
+                        <span><i className="anticon anticon-paper-clip"></i>
+                        <span className="ant-upload-list-item-name" title={modalItem.filename}><a href={`${server}${modalItem.url}`}>{modalItem.filename}</a></span></span>
+                    </div>
+                </div> 
+                <h2>点评</h2>
                 <Rate count={7} onChange={this.setStars.bind(this)} value={score}/> {scoreTxt}
                 <TextArea rows={4} value={comment} onChange={this.inputChange.bind(this)} />
             </Modal>

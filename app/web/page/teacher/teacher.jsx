@@ -14,9 +14,7 @@ export default class Teach extends Component {
         return <div className="teacher-container">
             <Header/>
             <div className="main-container">
-                <Teacher list={[
-                    1,2,3
-                ]}/>
+                <Teacher />
             </div>
         </div>;
     }

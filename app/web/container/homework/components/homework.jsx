@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-
-import { Collapse, Table, Divider, Modal, Row, Col, Card, Popover } from 'antd';
+import { Collapse, Table, Divider, Modal, Row, Col, Card, Popover, Spin } from 'antd';
 const Panel = Collapse.Panel;
 import matchScore from 'utils/score';
 import { connect } from 'react-redux';
-import { grade, load } from './../actions'
+import { grade, load, setList, setUnSubmitted } from './../actions'
 import Pop from './pop';
+import { getTasksApi, teaSetSubTaskApi, teaGetNotSubTaskApi } from 'service/task'
 
 import { fetchStuList } from 'service/homework'
 const mock = [
@@ -52,12 +52,31 @@ const StuContent = ({record}) => (
     <p>电话：{record.phone}</p>
   </div>
 );
+
+const unSubmittedColumns = [{
+  title: '学生姓名',
+  dataIndex: 'stu_name',
+  key: 'stu_name'
+}, {
+  title: '学号',
+  dataIndex: 'stu_id',
+  key: 'stu_id'
+}, {
+  title: '邮箱地址',
+  dataIndex: 'email',
+  key: 'email'
+}, {
+  title: '电话号码',
+  dataIndex: 'phone',
+  key: 'phone'
+}]
 class Course extends Component {
   constructor(props) {
     super(props);
     this.state = {
       visible: false,
-      gradeAction: false
+      gradeAction: false,
+      unsubmitted: []
     }
 
 
@@ -69,10 +88,6 @@ class Course extends Component {
       title: '学号',
       dataIndex: 'stu_id',
       key: 'stu_id',
-    }, {
-      title: '备注',
-      dataIndex: 'remarks',
-      key: 'remarks',
     }, {
       title: '作业状态',
       dataIndex: 'status',
@@ -106,28 +121,69 @@ class Course extends Component {
 
   
   componentWillMount() {
-    
+    const { class_id } = this.props;
+
+    getTasksApi({ class_id }).then( res => {
+      console.log(res)
+
+      const data = res.data.data;
+      // this.setState({
+      //   homework: data ? data.list : []
+      // })
+
+      this.props.setTaskList(data ? data.list : [])
+
+      if(data && data.list.length) {
+        const target = data.list[0]
+
+        // teaGetNotSubTaskApi({
+        //   class_id: target.class_id,
+        //   task_id: target.task_id
+        // }).then( res => {
+        //   const data = res.data.data;
+
+        //   this.props.setUnSubmitted(target.task_id, data ? data.list : [])
+        // })
+        teaSetSubTaskApi({
+          class_id: target.class_id,
+          task_id: target.task_id
+        }).then( res => {
+          console.log('get sub task', res);
+
+          const data = res.data.data;
+          this.props.setSubmitted(target.task_id, data ? data.list : [])
+        })
+
+        teaGetNotSubTaskApi({
+          class_id: target.class_id,
+          task_id: target.task_id
+        }).then( res => {
+          const data = res.data.data;
+
+          this.updateSubmitted(target.task_id, data ? data.list : []);
+
+        })
+
+        
+      }
+    })
+
   }
 
-  showStuInfo(stu_id) {
-    const info = {
-      imgUrl:null,
-      id:'20141002426',
-      email:'3939293@qq.com',
-      username:'diang'
-    }
+  updateSubmitted(task_id, unsubmitted) {
+    const newData = [...this.state.unsubmitted];
+    newData[task_id] = unsubmitted;
 
-    const newData = [...this.state.info];
+    console.log('new data', newData)
 
-    if(newData[stu_id]) return;
-    newData[stu_id] = info;
     this.setState({
-      info: newData
+      unsubmitted: newData
     })
   }
 
 
   showPop(modalItem) {
+    console.log('modalItem', modalItem)
     this.setState({
       visible: true,
       modalItem,
@@ -153,40 +209,66 @@ class Course extends Component {
   switchPanel(val) {
     // 切换panel要重新加载数据
     // 加载该panel下的学生作业
+    const { class_id } = this.props;
 
     console.log('switch',val)
     const { homework } = this.props;
     if(!homework[val]) {
-      this.props.setSubmitted(val, mock)
+      // this.props.setSubmitted(val, mock)
+
+      teaSetSubTaskApi({
+        class_id: class_id,
+        task_id: val
+      }).then( res => {
+
+        const data = res.data.data;
+        this.props.setSubmitted(val, data ? data.list : [])
+      })
+
+      teaGetNotSubTaskApi({
+        class_id: class_id,
+        task_id: val
+      }).then( res => {
+        const data = res.data.data;
+
+        this.updateSubmitted(val, data ? data.list : []);
+
+      })
 
     }
-
-
   }
 
   render() {
-    const { visible, modalItem, gradeAction } = this.state;
+    const { visible, modalItem, gradeAction, unsubmitted } = this.state;
     const { homework, list } = this.props;
 
-    console.log('homework', homework)
-    console.log('modalItem', modalItem)
+    console.log('unSubmitted', unsubmitted)
 
-    const active = list[0] && (list[0].task_id + '');  // to string
+    console.log('homework', homework)
+    console.log('list', list)
+
     return (
       <div className="homework-container">
-        <Collapse defaultActiveKey={[active]} onChange={this.switchPanel.bind(this)} accordion>
-          {
-            list && list.map( item => {
-              return <Panel header={hHeader(item)} key={item.task_id}>
-                <Card style={{ width: 600, margin:'0 auto 10px' }}>
-                  <p>{item.content}</p>
-                </Card>
-                <Table columns={this.columns} dataSource={homework[item.task_id]} />
-              </Panel>
-            })
-          }
-          
-        </Collapse>
+        {
+          list && list.length ? <Collapse defaultActiveKey={[list[0].task_id + '']} onChange={this.switchPanel.bind(this)} accordion>
+            {
+              list.map( item => {
+                return <Panel header={hHeader(item)} key={item.task_id}>
+                  <Card style={{ width: 600, margin:'0 auto 10px' }}>
+                    <p>{item.content}</p>
+                  </Card>
+                  <Divider orientation="left">已提交</Divider>
+                  { homework && homework[item.task_id] ? <Table columns={this.columns} dataSource={homework[item.task_id]} pagination={false}/> : null}
+                  <Divider orientation="left">未提交</Divider>
+                  { unsubmitted && unsubmitted[item.task_id] ? <Table columns={unSubmittedColumns} dataSource={unsubmitted[item.task_id]} pagination={false}/> : null}
+                  
+                </Panel>
+              })
+            }
+            
+          </Collapse> : (list && list.length == 0 ? <div style={{textAlign: 'center'}}>还没有布置作业</div> : <div style={{textAlign: 'center'}}><Spin /></div>)
+        }
+        
         <Pop visible={visible} modalItem={modalItem} onComment={this.onComment.bind(this)} action={gradeAction} handleCancel={this.handleCancel.bind(this)} />
 
       </div>
@@ -206,7 +288,9 @@ const mapStateToProps = ( state ) => {
 const mapDispatchToProps = dispatch => {
   return {
     makeGrade: (task_id, submit_tid, score) => dispatch(grade(task_id, submit_tid, score)),
-    setSubmitted: (task_id, list) => dispatch(load(task_id, list))
+    setSubmitted: (task_id, list) => dispatch(load(task_id, list)),
+    setTaskList: (list) => dispatch(setList(list)),
+    setUnSubmitted: (task_id, list) => dispatch(setUnSubmitted(task_id, list))
   }
 }
 

@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
-import { Form, Icon, Input, Button, Checkbox } from 'antd';
+import { Form, Icon, Input, Button, Checkbox, message } from 'antd';
 const FormItem = Form.Item;
 
 import { loginApi } from 'service/account'
-
+import cookies from 'js-cookie';
+import { linkTo } from 'utils'
 import './login.scss'
 
 class Login extends Component {
@@ -15,6 +16,22 @@ class Login extends Component {
                 const options = Object.assign({}, values, {type: values.type ? 2 : 1})
 
                 console.log(options)
+
+                loginApi(options).then( res => {
+                    if(res.data.success) {
+                        message.success('登录成功');
+                        cookies.set('_token_', res.data.jwt)
+                        cookies.set('_type_', options.type)
+
+                        if(values.type) {
+                            linkTo('/teacher');
+                        } else {
+                            linkTo('/index');
+                        }
+                    } else {
+                        message.error(res.data.error)
+                    }
+                })
 
                 // ====调用登录接口
                 // 登录成功后要存储token到cookie中

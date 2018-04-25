@@ -1,4 +1,4 @@
-import { LIST, ADD, DEL, SET_GRADE, SET_SUBMITTED } from './constant';
+import { LIST, ADD, DEL, SET_GRADE, SET_SUBMITTED, SET_LIST, SET_UNSUBMITTED } from './constant';
 export default function update(state={}, action) {
   // const newState = Object.assign({}, state);
   // if (action.type === ADD) {
@@ -30,13 +30,30 @@ export default function update(state={}, action) {
 
       return Object.assign({}, state, { homework });
       break;
+
+    case SET_UNSUBMITTED:
+      let newData2 = Object.assign({}, state.unsubmitted || []);
+      newData2[action.task_id] = action.list;
+
+      console.log('in reducer2',Object.assign({}, state, { unsubmitted: newData2}))
+      return Object.assign({}, state, { unsubmitted: newData2});
+      break;
     case SET_SUBMITTED:
       const { task_id, list } = action;
-      const newData = Object.assign({}, state.homework);
-      newData[task_id] = list;
+      let newData1 = Object.assign({}, state.homework || []);
+      newData1[task_id] = list;
 
-      return Object.assign({}, state, { homework: newData })
+      console.log('in reducer 1', Object.assign({}, state, { homework: newData1 }))
+
+      return Object.assign({}, state, { homework: newData1 })
       break;
+    
+
+    case SET_LIST: 
+      return Object.assign({}, state, { list: action.list });
+      break;
+
+    
 
     default: 
       return state

@@ -1,27 +1,25 @@
 import axios from 'axios'
+import { get, post } from './request';
 
 export function modifyCourse(params) {
-    return axios.get('/course/updateCourse', {
-        params
-    })
+    return post('/course/updateCourse', params)
 }
 
 export function fileListApi(params) {
-    return axios.get('/file/getFileByCourseId', {
-        params
-    })
+    return get('/file/getFileByCourseId', params)
 }
-
-export function courseListApi(params) {
-    return axios.get('/course/updateCourse', {
-        params
-    })
-}
-
 export function getCoursesByCurrentId(params) {
     return axios.get('/course/getCoursesByCurrentId', {
         params
     })
+}
+
+export function searchCourseApi(params) {
+    return get('/course/searchAllCourse', params)
+}
+
+export function createCourseApi(params) {
+    return post('/course/createCourse', params)
 }
 
 

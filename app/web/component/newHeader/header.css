@@ -15,6 +15,10 @@
     font-weight: 600;
     font-size: 34px;
 }
+.header h1 img {
+    width: 70px;
+    height: 100px;
+}
 .header nav {
     letter-spacing: 2px;
     

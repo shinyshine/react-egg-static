@@ -1,14 +1,6 @@
-import axios from 'axios'
+import { get } from './request'
 
-export function deleteFile(params) {
-    return axios.get('/api/getStuListByid', {
-        params
-    })
+export function deleteFileApi(params) {
+    return get('file/deleteCourseFile',params)
 }
 
-export function uploadApi(params) {
-}
-
-export function submitWorkApi(params) {
-    
-}

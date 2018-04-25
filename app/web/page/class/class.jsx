@@ -15,13 +15,14 @@ const clientRender = () => {
   console.log('client render')
   console.log('__INITIAL_STATE__', window.__INITIAL_STATE__)
   const store = create(window.__INITIAL_STATE__);
-  const url = store.getState().url;
+
+  const { url, query } = store.getState();
   ReactDOM.render(
     <div>
       <Header></Header>
       <Provider store={ store }>
         <BrowserRouter>
-          <SSR url={ url }/>
+          <SSR url={ url } query={query}/>
         </BrowserRouter>
       </Provider>
     </div>,
@@ -31,7 +32,7 @@ const clientRender = () => {
 
 const serverRender = (context, options)=> {
   console.log('server render')
-  const url = context.state.url;
+  const { url, query } = context.state;
   const branch = matchRoutes(routes, url);
   const promises = branch.map(({route}) => {
     const fetch = route.component.fetch;
@@ -52,7 +53,7 @@ const serverRender = (context, options)=> {
           <Header></Header>
           <Provider store={store}>
             <StaticRouter location={url} context={{}}>
-              <SSR url={url}/>
+              <SSR url={url} query={query}/>
             </StaticRouter>
           </Provider>
         </div>

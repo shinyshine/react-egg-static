@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, Icon, Input, Button, Checkbox } from 'antd';
+import { Form, Icon, Input, Button, Checkbox, message } from 'antd';
 const FormItem = Form.Item;
 
 import { registerApi, test } from 'service/account'
@@ -13,26 +13,21 @@ class Login extends Component {
     handleSubmit(e) {
         e.preventDefault();
         this.props.form.validateFields((err, values) => {
-            // if (!err) {
-            //     const options = Object.assign({}, values, { type: values.type ? 2 : 1})
+            if (!err) {
+                const options = Object.assign({}, values, { type: values.type ? 2 : 1})
 
-            //     console.log('options', options)
+                console.log('options', options)
 
-            //     // registerApi(options).then( res => {
-            //     //     console.log('register res', res)
-            //     // })
+                registerApi(options).then( res => {
+                    if(res.data.success) {
+                        message.success('注册成功');
+                        window.location.reload();
+                    } else {
+                        message.error('注册失败，请稍后重试')
+                    }
+                })
 
-            //     test().then(res => {
-            //         console.log('test res', res)
-            //     })
-
-
-            //     // =======调用注册接口
-            // } 
-
-            test({data: 123}).then(res => {
-                console.log('test res', res)
-            })
+            } 
 
         });
     }

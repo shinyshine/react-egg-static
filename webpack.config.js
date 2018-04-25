@@ -5,9 +5,6 @@ module.exports = {
   entry: {
     include: ['app/web/page',
       { layout: 'app/web/framework/layout/layout.jsx?loader=false' },
-      { 'spa/redux': 'app/web/page/spa/redux.jsx?loader=false' },
-      { 'spa/client': 'app/web/page/spa/client.jsx?loader=false' },
-      { 'spa/ssr': 'app/web/page/spa/ssr.jsx?loader=false' },
       { 'class/class': 'app/web/page/class/class.jsx?loader=false',
         'course/course': 'app/web/page/course/course.jsx?loader=false',
         'course/edit': 'app/web/page/course/edit.jsx?loader=false',

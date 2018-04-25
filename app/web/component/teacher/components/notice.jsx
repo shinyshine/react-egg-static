@@ -1,7 +1,20 @@
 import React, { Component } from 'react';
-import { List, Avatar, Icon, Card, Spin} from 'antd';
-import './notice.scss';
+import { List, Avatar, Icon, Card, Spin } from 'antd';
+
+
 import { getLatestNoticesApi } from 'service/notice'
+const listData = [];
+for (let i = 0; i < 5; i++) {
+  listData.push({
+    href: 'http://ant.design',
+    title: `考试通知（请认真查看）${i}`,
+    description: '数据结构',
+    content: '下周四将于实验室A202进行期末机考，要求同学们独立完成',
+    course_name: '数据结构',
+    tea_name: '杨老师',
+    // deadline: '2018-04-05'
+  });
+}
 
 const IconText = ({ type, text }) => (
     <span>
@@ -17,9 +30,9 @@ export default class Notice extends Component {
 
     componentWillMount() {
         getLatestNoticesApi().then( res => {
-            console.log(res);
-            const data = res.data.data;
+            console.log('res', res)
 
+            const data = res.data.data;
             this.setState({
                 notice: data ? data.list : []
             })
@@ -28,17 +41,21 @@ export default class Notice extends Component {
 
     render() {
         const { notice } = this.state;
-        console.log('notice', notice)
+
         return <div className="notice-list">
             <h2>公告栏</h2>
             {
                 notice && notice.length > 0 ?
                     notice.map( item => {
-                        return <Card title={item.title} extra={<span><span style={{marginRight:'16px'}}>{item.course_name}</span> {item.tea_name}</span>}>
+                        return <Card title={item.title}>
                             <p>{item.content}</p>
                         </Card>
                     })
-                : ( notice && notice.length == 0 ? <div style={{textAlign: 'center'}}>暂无数据</div> : <div style={{textAlign: 'center'}}><Spin /></div>)
+                : ( 
+                    notice && notice.length == 0 ?
+                    <div style={{textAlign: 'center'}}>暂无数据</div>
+                    : <div style={{textAlign: 'center'}}><Spin /></div>
+                )
             }
         </div>
     }

@@ -3,7 +3,7 @@ module.exports = app => {
 
   const { router, controller } = app;
   
-  app.get('/index/:id', app.controller.student.index.page);
+  app.get('/index', app.controller.student.index.page);
   app.get('/login', app.controller.login.login.page);
   app.get('/class(/.+)?', app.controller.teacher.course.renderClassPage);
   app.get('/teacher', app.controller.teacher.index.page);
@@ -17,6 +17,8 @@ module.exports = app => {
   app.get('/account', app.controller.account.page)
   app.get('/info', app.controller.account.info)
   app.get('/upload', app.controller.upload.page)
+
+  // app.get('/mobile/notice', app.controller.mobile.notice);
 
 
 

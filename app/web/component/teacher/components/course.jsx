@@ -1,91 +1,41 @@
 import React, { Component } from 'react';
-import { Collapse, List, Avatar, Row, Col, Button, Icon, message, Popconfirm, Input } from 'antd';
+import { Collapse, List, Avatar, Row, Col, Button, Icon, message, Popconfirm, Input, Spin } from 'antd';
 const Panel = Collapse.Panel;
 import './course.scss'
 
-import { getCoursesByCurrentId } from 'service/course'
+import { getCourseApi, getAllClassApi, addClassApi, deleteClassApi } from 'service/teacher'
 import { linkTo } from 'utils';
-
-
-
-const data = [
-    {
-        course_id:24,
-        update_time:null,
-        tea_id:20141002426,
-        create_time:'2018-04-12 21:54:28',
-        course_name:'DB2',
-        tea_name:'tDiang',
-        introduction: '11255'
-    }, {
-        course_id:25,
-        update_time:null,
-        tea_id:20141002426,
-        create_time:'2018-04-12 21:54:28',
-        course_name:'DB2',
-        tea_name:'tDiang',
-        introduction: '11255'
-    }, {
-        course_id:26,
-        update_time:null,
-        tea_id:20141002426,
-        create_time:'2018-04-12 21:54:28',
-        course_name:'DB2',
-        tea_name:'tDiang',
-        introduction: '11255'
-    }
-]
-
-const mock = [
-    {
-        course_id:19,
-        tea_id:20141002412,
-        create_time:'2018-04-09 16:30:05',
-        class_id:20,
-        tea_name:'tTracy',
-        class_name:'1402'
-    }, {
-        course_id:23,
-        tea_id:20141002412,
-        create_time:'2018-04-09 16:30:05',
-        class_id:21,
-        tea_name:'tTracy',
-        class_name:'1401'
-    }, {
-        course_id:12,
-        tea_id:20141002412,
-        create_time:'2018-04-09 16:30:05',
-        class_id:22,
-        tea_name:'tTracy',
-        class_name:'1402'
-    }, {
-        course_id:154,
-        tea_id:20141002412,
-        create_time:'2018-04-09 16:30:05',
-        class_id:23,
-        tea_name:'tTracy',
-        class_name:'1404'
-    }
-]
 
 const ClassInput = ({ value, onChange }) => (
     <div>
-        <Input value={value} style={{width: '160px'}} placeholder="请输入班级名称" />
+        <Input value={value} style={{width: '160px'}} placeholder="请输入班级名称" onChange={onChange} />
     </div>
 )
 export default class Teacher extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            newClass: '',
-            course: data
+            course: []
         }
     }
 
     componentWillMount() {
-        const { course } = this.state;
 
-        this.fetchClass(course[0].course_id)
+        getCourseApi().then( res => {
+            console.log(res);
+            const data = res.data.data;
+
+            this.setState({
+                course: data ? data.list : []
+            })
+
+            if(data && data.list) {
+                this.fetchClass(data.list[0].course_id)
+            }
+
+        })
+
+        
     }
     fetchClass(course_id) {
         const newData = [...this.state.course];
@@ -93,11 +43,14 @@ export default class Teacher extends Component {
 
         if(target.classList) return;
 
-        target.classList = mock;
-        this.setState({
-            course: newData
+        getAllClassApi({ course_id }).then( res => {
+            console.log(res);
+            const data = res.data.data;
+            target.classList = data.list || [];
+            this.setState({
+                course: newData
+            })
         })
-
 
     }
     uploadFile(e) {
@@ -105,50 +58,104 @@ export default class Teacher extends Component {
 
     }
 
-    addClassToCourse() {
+    addClassToCourse(course_id) {
+        const newData = [...this.state.course];
+        const target = newData.filter(item => item.course_id === course_id)[0];
+        const options = {
+            course_id,
+            class_name: target.new_class
+        }
+        addClassApi(options).then( res => {
+            if( res.data.success) {
+                message.success('成功添加班级');
 
+                target.classList.unshift(res.data.message.class_info);
+
+                this.setState({
+                    course: newData
+                })
+            } else {
+                message.error(res.data.error);
+            }
+            
+        })
     }
 
-    handleInputChange(e) {
-        console.log(e.target.value);
+    handleInputChange(e, course_id) {
+
+        console.log(e, course_id)
+        const newData = [...this.state.course];
+        const target = newData.filter( item => item.course_id === course_id)[0];
+        target.new_class = e.target.value;
+
+        this.setState({
+            course: newData
+        })
     }
     togglePannel(course_id) {
         if(course_id) {
             this.fetchClass(course_id)
         }
     }
+    delete( class_id ) {
+        console.log(class_id)
+        deleteClassApi({ class_id }).then( res => {
+            if(res.data.success){
+                message.success('成功删除一个班级');
+                window.location.reload();
+            } else {
+                message.error('出现错误，请稍后重试')
+            }
+        })
+    }
+    linkToUpload({ course_id, course_name }) {
+        linkTo(`/upload?cid=${course_id}&c_name=${course_name}`)
+    }
  
     render() {
-        const { newClass } = this.state;
+        const { course } = this.state;
         return <div className="course-list">
             <Row>
                 <Col span={18}><p className="course-title">我的课程</p></Col>
-                {/* <Col span={6}><div className="btn-right-align"><Button type="primary">添加课程</Button></div></Col> */}
             </Row>
-            <Collapse defaultActiveKey={[data[0].course_id.toString()]} onChange={this.togglePannel.bind(this)} accordion>
+            { course.length > 0 ?
+                <Collapse defaultActiveKey={[course[0].course_id.toString()]} onChange={this.togglePannel.bind(this)} accordion>
                 {
-                    data ? data.map( item => {
+                    course ? course.map( item => {
                         return <Panel header={this.courseHeader(item.course_name, item.course_id)} key={item.course_id}>
-                        <Popconfirm title={<ClassInput value={newClass} onChange={this.handleInputChange} />} okText="添加" cancelText="取消" onConfirm={this.addClassToCourse}>
+                        <Popconfirm title={<ClassInput value={item.new_class} onChange={(e) => this.handleInputChange(e, item.course_id)} />} okText="添加" cancelText="取消" onConfirm={this.addClassToCourse.bind(this, item.course_id)}>
                           <Button className="add-class-btn" size="small" type="primary"><Icon type="plus" />添加班级</Button>
                         </Popconfirm>
-    
-                        <List
-                            itemLayout="horizontal"
-                            dataSource={item.classList}
-                            renderItem={classItem => (
-                                <List.Item actions={[<a target="_blank" href={`/edit?class=${classItem.class_id}`}>发布公告</a>, <a target="_blank" href={`/class?cou=${classItem.course_id}&class=${classItem.class_id}`}>批改作业</a>,<a>删除</a>]}>
-                                    <List.Item.Meta
-                                        avatar={<Avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />}
-                                        title={<a href="https://ant.design">{classItem.class_name}</a>}
-                                    />
-                                </List.Item>
-                            )}
-                        />
+                        <Button style={{marginLeft: '20px'}} onClick={this.linkToUpload.bind(this, item)} className="add-class-btn" size="small" type="primary">上传资料</Button>
+                        
+                        { item.classList ?
+                            <List
+                                itemLayout="horizontal"
+                                dataSource={item.classList}
+                                renderItem={classItem => (
+                                    <List.Item actions={[
+                                        <a href={`/edit?class_id=${classItem.class_id}&course_n=${item.course_name}&class_n=${classItem.class_name}&type=n`}>发布公告</a>,
+                                        <a href={`/edit?class_id=${classItem.class_id}&course_n=${item.course_name}&class_n=${classItem.class_name}&type=h`}>布置作业</a>,  
+                                        <a href={`/class?cou=${classItem.course_id}&class_id=${classItem.class_id}&course_n=${item.course_name}&class_n=${classItem.class_name}`}>进入班级</a>,
+                                        <Popconfirm title="确认删除该班级以及相关数据？" okText="确认" cancelText="取消" onConfirm={this.delete.bind(this, classItem.class_id)}>
+                                            <a>删除</a>
+                                        </Popconfirm>]}>
+                                        <List.Item.Meta
+                                            avatar={<Avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />}
+                                            title={<a href="https://ant.design">{classItem.class_name}</a>}
+                                        />
+                                    </List.Item>
+                                )}
+                            /> : <p>该课程暂无班级</p>
+                        } 
+                        
                     </Panel>
                     }) : null
                 }
-            </Collapse>
+                </Collapse>
+                : <div style={{textAlign: 'center'}}><Spin /></div>
+            }
+            
 
         </div>
     }
@@ -159,12 +166,6 @@ export default class Teacher extends Component {
                 <Col span={17}>
                     {name}
                 </Col>
-                {/* <Col span={7}>
-                    <div className="right-btn-group">
-                        <Button type="primary" onClick={this.uploadFile.bind(this, course_id)}>上传资料</Button>
-                    </div>
-                    
-                </Col> */}
             </Row>
 
         </div>

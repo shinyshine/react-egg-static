@@ -1,7 +1,7 @@
-import { server } from 'config/config.server'
+import { server, client } from 'config/config.server'
 
 export function linkTo(target) {
-    window.location.href = `${server}${target}`
+    window.location.href = `${client}${target}`
 }
 
 

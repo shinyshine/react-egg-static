@@ -1,20 +1,17 @@
 import React, { Component } from 'react';
-import { Table, Button, Popconfirm, Select } from 'antd';
+import { Table, Button, Popconfirm, Select, Spin, message } from 'antd';
 import { linkTo } from 'utils'
 
 const Option = Select.Option;
 
-import { joinCourseApi } from 'service/search'
+import { joinCourseApi } from 'service/student'
 
+import { searchCourseApi } from 'service/course'
 
+const queryString = require('query-string');
+
+const keyword = queryString.parse(location.search).key;
   
-// function SearchResult1({ data }) {
-
-//     return <div className="search-reault">
-//         <Table rowKey='course_id' columns={columns} dataSource={data} />
-//     </div>
-// }
-
 class SearchResult extends Component {
   constructor(props) {
     super(props);
@@ -44,11 +41,10 @@ class SearchResult extends Component {
             style={{ width: 120, marginRight: '12px' }}
             placeholder="未选择班级"
             onChange={(value) => this.handleSelect(value, record)}
-            // filterOption={(input, option) => option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}
           >
             {
-              record.class.length > 0 ?
-              record.class.map( item => {
+              record.class_list && record.class_list.length > 0 ?
+              record.class_list.map( item => {
                 return <Option value={item.class_id}>{item.class_name}</Option>
               })
               : null
@@ -62,9 +58,22 @@ class SearchResult extends Component {
       ),
     }];
 
-    this.state = { data: props.data };
+    this.state = {}
 
   }
+
+  componentWillMount() {
+    searchCourseApi({ course_name: keyword }).then( res => {
+        console.log(res)
+
+        const data = res.data.message;
+
+        this.setState({
+            data: data ? data.list : []
+        })
+    })
+}
+
 
   // 选择某个班级后
   handleSelect(value, record) {
@@ -81,20 +90,29 @@ class SearchResult extends Component {
   }
 
   joinCourse(record) {
-    console.log(record)
     // 请求接口加入该课程然后跳转到学生的首页展示刚刚选择的课程
-
-    joinCourseApi({param: 123}).then( res => {
+    joinCourseApi({class_id: record.selected}).then( res => {
       console.log('res', res);
-      linkTo(`index/${record.course_id}`);
-      
+
+      if(res.data.success) {
+        message.success('成功加入该课程');
+        linkTo('/index');
+      } else {
+        message.error('出现错误，请稍后重试')
+      }
     })
   }
 
   render() {
     const { data } = this.state;
+
+    console.log('data', data)
     return <div className="search-reault">
-        <Table rowKey="course_id" columns={this.columns} dataSource={data} />
+        {
+          data && data.length ? 
+          <Table rowKey="course_id" columns={this.columns} dataSource={data} />
+          : (data && data.length == 0 ? <div style={{textAlign: 'center'}}>无相关搜索结果</div> : <div style={{textAlign: 'center'}}><Spin /></div>)
+        }
     </div>
   }
 }

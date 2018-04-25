@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
-import Course from './components/course.jsx';
-import Question from './components/question.jsx';
+import Course from './components/course';
+import Notice from './components/notice';
 
 export default class Teacher extends Component {
     constructor(props) {
@@ -17,7 +17,7 @@ export default class Teacher extends Component {
     render() {
         return <div className="content">
             <Course/>
-            <Question/>
+            <Notice/>
         </div>
     }
 }

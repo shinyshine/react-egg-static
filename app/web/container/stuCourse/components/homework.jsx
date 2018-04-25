@@ -1,110 +1,16 @@
 import React, { Component } from 'react';
-import { List, Button, Upload, message } from 'antd';
+import { List, Button, Upload, message, Row, Col, Divider } from 'antd';
+const queryString = require('query-string');
 
 import { uploadApi, submitWorkApi } from 'service/file'
-const data = [
-    {
-        title: '数据结构第九次作业',
-        content: '课本89页课后练习题第3，4，5',
-        deadline: '2018-04-04'
+import { getStuTaskApi, getStuFinishedTaskApi, submitTaskApi } from 'service/task';
+
+import { uploadProps } from 'service/upload';
+import matchScore from 'utils/score'
+
+const class_id = queryString.parse(location.search).class;
 
 
-    },
-    {
-        title: '数据结构第八次作业',
-        content: '课本89页课后练习题第3，4，5',
-        deadline: '2018-04-04'
-
-
-    },
-    {
-        title: '数据结构第七次作业',
-        content: '课本89页课后练习题第3，4，5',
-        deadline: '2018-04-04'
-
-
-    },
-    {
-        title: '数据结构第六次作业',
-        content: '课本89页课后练习题第3，4，5',
-        deadline: '2018-04-04'
-
-
-    },
-];
-
-const mock1 = [
-    {
-        filename:'CareerFrog_简历模板_中文(1).docx',
-        grade: 'A+',
-        task_id:8,
-        submit_tid:8,
-        title: '数据3第一章作业',
-        content: '请完成1.5',
-        url: '/fileDir/u/2018-03-13/14a8ec60100946e28fa4e2b414cb74ccCareerFrog_简历模板_中文(1).docx'
-    },{
-        filename:'CareerFrog_简历模板_中文(1).docx',
-        grade: 'A+',
-        task_id:9,
-        submit_tid:9,
-        title: '数据3第二章作业',
-        content: '请完成1.5',
-        url: '/fileDir/u/2018-03-13/14a8ec60100946e28fa4e2b414cb74ccCareerFrog_简历模板_中文(1).docx'
-    },{
-        filename:'CareerFrog_简历模板_中文(1).docx',
-        grade: 'A+',
-        task_id:10,
-        submit_tid:10,
-        title: '数据3第三章作业',
-        content: '请完成1.5',
-        url: '/fileDir/u/2018-03-13/14a8ec60100946e28fa4e2b414cb74ccCareerFrog_简历模板_中文(1).docx'
-    },
-]
-const mock2 = [
-    {
-        tea_id:20141002426,
-        create_time:'2018-04-10 11:09:11',
-        class_id:21,
-        end_time:'2018-04-11 00:00:00',
-        task_id:10,
-        tea_name:'tDiang',
-        title:'数据第四章作业',
-        content:'请完成4.5',
-    },
-    {
-        tea_id:20141002426,
-        create_time:'2018-04-10 11:09:11',
-        class_id:21,
-        end_time:'2018-04-11 00:00:00',
-        task_id:11,
-        tea_name:'tDiang',
-        title:'数据第四章作业',
-        content:'请完成4.5',
-    }
-]
-
-let file_id = 0;
-const uploadProps = {
-    name: 'file',
-    action: '//jsonplaceholder.typicode.com/posts/',
-    headers: {
-      authorization: 'authorization-text',
-    },
-    // onChange(info) {
-    //   if (info.file.status !== 'uploading') {
-    //     console.log(info.file, info.fileList);
-    //   }
-    //   if (info.file.status === 'done') {
-    //     message.success(`${info.file.name} file uploaded successfully`);
-    //     console.log('info', info)
-    //     console.log('success', info.file.response.id);
-    //     file_id = info.file.response.id;
-
-    //   } else if (info.file.status === 'error') {
-    //     message.error(`${info.file.name} file upload failed.`);
-    //   }
-    // },
-  };
 
 const FinishedFile = ({ item }) => (
     <div className="ant-upload-list-item ant-upload-list-item-done">
@@ -117,17 +23,27 @@ const FinishedFile = ({ item }) => (
 export default class Question extends Component {
     constructor() {
         super();
-
-    }
-
-    componentDidMount() {
+        this.state = {}
 
     }
 
     componentWillMount() {
-        this.setState({
-            finished: mock1,
-            unfinished: mock2
+        console.log('class', class_id)
+
+        getStuTaskApi({ class_id }).then( res => {
+            console.log('res 1', res);
+            const data = res.data.data;
+            this.setState({
+                finished: data ? data.list : []
+            })
+        })
+
+        getStuFinishedTaskApi({ class_id }).then( res => {
+            console.log('res 2', res)
+            const data = res.data.data;
+            this.setState({
+                unfinished: data ? data.list : []
+            })
         })
     }
 
@@ -135,7 +51,24 @@ export default class Question extends Component {
 
         // 这里请求提交作业的接口
         if (info.file.status === 'done') {
-            this.updateData(info, task_id);
+            const file_id = info.file.response.file_id;
+
+            submitTaskApi({
+                file_id,
+                task_id
+            }).then( res => {
+                console.log('submit res', res);
+
+                if(!res.data.success) {
+                    message.error('作业已过期，上传无效');
+                }else {
+                    message.success('作业提交成功')
+                }
+
+                this.updateData(info, task_id);
+                
+            })
+            
         }
 
     }
@@ -158,17 +91,28 @@ export default class Question extends Component {
     render() {
         const { finished, unfinished } = this.state;
 
+        console.log('finished', finished);
+        console.log('unfinished', unfinished)
+
         return <div className="tab-container">
+            {/* <Divider orientation="left">未提交</Divider> */}
             <List
+                loading={!unfinished}
+                locale={{emptyText: ''}}
                 itemLayout="horizontal"
                 dataSource={unfinished}
                 renderItem={item => (
                     <List.Item>
                         <List.Item.Meta
-                            title={<strong>{item.title} <span className="deadline">截止日期: {item.end_time}</span></strong>}
+                            title={
+                                <Row>
+                                    <Col span={12}><strong>{item.title}</strong></Col>
+                                    <Col span={8}><span className="deadline">截止日期: {item.end_time}</span></Col>
+                                </Row>
+                            }
                             description={
                             <div>
-                                <p>{item.content}</p>
+                                <p style={{marginBottom: '8px'}}>{item.content}</p>
                                 {
                                     item.filename ? <FinishedFile item={item} />
                                     : <Upload name="logo" {...uploadProps} onChange={(e) => this.uploadChange(e, item.task_id)}>
@@ -177,25 +121,29 @@ export default class Question extends Component {
                                         </Button>
                                       </Upload>
                                 }
-                                
                             </div>}
                         />
                     </List.Item>
                 )}
             />
 
+            <Divider>已提交</Divider>
+
             <List
+                loading={!finished}
+                locale={{emptyText: '暂无已提交数据'}}
                 itemLayout="horizontal"
                 dataSource={finished}
                 renderItem={item => (
-                    <List.Item actions={[<Button type="primary" disabled>已提交</Button>]}>
+                    <List.Item>
                         <List.Item.Meta
                             title={<strong>{item.title} </strong>}
                             description={
                                 <div>
                                     <p>{item.content}</p>
                                     <FinishedFile item={item} />
-                                    <p>评分：{item.grade}</p>
+                                    <p>评分：{matchScore[item.grade]}</p>
+                                    <p>老师评价：{item.remark}</p>
                                 </div>}
                         />
                     </List.Item>
