@@ -21,7 +21,10 @@ class Login extends Component {
                 registerApi(options).then( res => {
                     if(res.data.success) {
                         message.success('注册成功');
-                        window.location.reload();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000)
+                        
                     } else {
                         message.error('注册失败，请稍后重试')
                     }

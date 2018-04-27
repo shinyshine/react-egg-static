@@ -1,5 +1,5 @@
 module.exports = {
-    server: 'http://192.168.0.105:81',
-    client: 'http://192.168.0.100:7001'
+    server: 'http://10.173.116.95:81',
+    client: 'http://10.173.116.105:7001'
 
 }

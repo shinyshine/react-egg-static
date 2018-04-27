@@ -4,7 +4,7 @@ export default class Layout extends Component {
   render() {
     return <html>
       <head>
-        <title>3333{this.props.title}</title>
+        <title>广外教学平台</title>
         <meta charSet="utf-8"></meta>
         <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"></meta>
         <meta name="keywords" content={this.props.keywords}></meta>

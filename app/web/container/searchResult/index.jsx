@@ -28,6 +28,7 @@ class SearchResult extends Component {
       title: '课程简介',
       dataIndex: 'introduction',
       key: 'introduction',
+      width: '40%'
     },{
       title: '创建时间',
       dataIndex: 'create_time',
